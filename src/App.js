@@ -1,25 +1,25 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useRef } from 'react';
 import './App.css';
-
+import Custom3DGraph from './Custom3DGraph'
+import Custom2DGraph from './Custom2DGraph'
 function App() {
+  const graphEle = useRef(null)
+  useEffect(() => {
+    console.log('graphEle=-', graphEle)
+  }, [])
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div ref={graphEle}></div>
+      <div style={{display:'flex', flexDirection: 'row'}}>
+        <div>
+          {/* <Custom3DGraph /> */}
+        </div>
+        <div>
+          <Custom2DGraph />
+        </div>
+      </div>
     </div>
+   
   );
 }
 
