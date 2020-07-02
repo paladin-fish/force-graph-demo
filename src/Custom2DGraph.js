@@ -64,7 +64,7 @@ export default class Custom3DGraph extends React.Component {
         data.links.forEach(link => {
             const a = data.nodes.find(bean => bean.id ===link.source);
             const b = data.nodes.find(bean => bean.id ===link.target);
-            console.log(data.nodes, a,b)
+            // console.log(data.nodes, a,b)
             !a.neighbors && (a.neighbors = []);
             !b.neighbors && (b.neighbors = []);
             a.neighbors.push(b);
@@ -133,17 +133,37 @@ export default class Custom3DGraph extends React.Component {
             ctx.drawImage(node.img, node.x - bckgDimensions[0] / 2 - imgSize, node.y - fontSize / 2, fontSize, fontSize);
         }
 
-        if (this.highlightNodes.has(node) || this.hoverHighlightNodes.has(node)) {
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillRect(node.x - bckgDimensions[0] / 2 - 5, node.y - bckgDimensions[1] / 2 - 5 , bckgDimensions[0] + 10, bckgDimensions[1] + 10);
+        ctx.beginPath();
+        let r = 7
+        ctx.fillStyle = 'rgba(172, 77, 229)';
+        if (this.highlightNodes.size > 0) { // 当前有选中结点
+            if (this.highlightNodes.has(node)) {
+                r = 1.2*r
+                // ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                // ctx.fillRect(node.x - bckgDimensions[0] / 2 - 5, node.y - bckgDimensions[1] / 2 - 5 , bckgDimensions[0] + 10, bckgDimensions[1] + 10);
+            } else {
+                ctx.fillStyle = 'rgba(172, 77, 229, 0.6)';
+            }
+        } else {
+            if (this.hoverHighlightNodes.has(node)) { // 当前有hover结点
+                r = 1.2*r
+            }
         }
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
+        // if (this.highlightNodes.has(node) || this.hoverHighlightNodes.has(node)) {
+        //     ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        //     ctx.fillRect(node.x - bckgDimensions[0] / 2 - 5, node.y - bckgDimensions[1] / 2 - 5 , bckgDimensions[0] + 10, bckgDimensions[1] + 10);
+        // } else {
+        //     ctx.fillStyle = 'rgba(172, 77, 229)';
+        // }
+        ctx.arc(node.x,node.y,r,0*Math.PI,2*Math.PI)
+        ctx.fill()
+        ctx.closePath();
+        // ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
         
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = node.color;
-        ctx.fillText(label, node.x, node.y);
+        ctx.fillText(label, node.x, node.y + imgSize);
         })
         // .onNodeDoubleClick((node, event) => {
         //     console.log('double click====', node, event)
@@ -217,7 +237,7 @@ export default class Custom3DGraph extends React.Component {
         })
         .linkDirectionalParticleWidth(link => this.highlightLinks.has(link)  || this.hoverHighlightLinks.has(link) ? 4 : 0)
         .linkDirectionalParticles("value")
-        .linkColor(link => this.highlightLinks.size > 0? this.highlightLinks.has(link) ? 'rgba(0,0,0,0.4)': 'rgba(0,0,0,0.05)' :  this.hoverHighlightLinks.has(link)? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.2)')
+        .linkColor(link => this.highlightLinks.size > 0? this.highlightLinks.has(link) ? 'rgba(0,0,0,0.4)': 'rgba(0,0,0,0.05)' :  this.hoverHighlightLinks.has(link)? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)')
         .linkDirectionalParticleSpeed(d => d.value * 0.001)
         // .nodeCanvasObjectMode(node => highlightNodes.has(node) ? 'after' : undefined)
         // .onNodeDragEnd(node => {
@@ -380,7 +400,7 @@ export default class Custom3DGraph extends React.Component {
         }   
     }
     render(){
-        console.log('mode: ', this.state.mode)
+        // console.log('mode: ', this.state.mode)
         return (
             <div>
                 <div style={{zIndex: 1299, position:'fixed', top: 0, left:0, backgroundColor: "white", textAlign:'center',display: 'flex',
@@ -396,7 +416,7 @@ export default class Custom3DGraph extends React.Component {
                         marginRight: '16px',
                         cursor: 'pointer'
                     }} onClick={()=>{
-                    console.log('click');
+                    // console.log('click');
                     if (this.state.mode === 'normal') {
                         this.normalZoom = this.graph.zoom()
                     } else {
@@ -427,7 +447,7 @@ export default class Custom3DGraph extends React.Component {
                     </Select>
                     <Autocomplete
                         id="combo-box-demo"
-                        onChange={(e,node)=>{console.log('####',node); this.toFitNode(node)}}
+                        onChange={(e,node)=>{this.toFitNode(node)}}
                         options={this.state.data && this.state.data.nodes || []}
                         getOptionLabel={(option) => option.id}
                         style={{ width: 300 }}
