@@ -8,13 +8,17 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
+const LOGO_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAFKADAAQAAAABAAAAFAAAAACy3fD9AAABG0lEQVQ4Ee2UMU7DMBSG04DElLFIHIChaiSO0ali4BwcARZUpp6gh2BAAlU9QZcuPQVtOrQbCNHy/a6NEikWT4nExC99tuO89yd24pckR13RzWAHezgY+SJuC6+Qg5PMNmA1icWt8cg7NFMYwBLuoAAlWaT8LjxCH17AvbIMhrpoqBvy5LFJaTJvomU3lVYlZTIUknWZx+hqG3LTYFa93eLq37DF5vnUP9nDSx42gXs48w82d6c1kU/MhYOuwz+qiYlO1S35ohRdHpem40MZhr9cB126hRUsYAwWhVyVvp/icG3JjMSE4lBoD+eg8qW9OoFQGxn+Kr3ZOTz4SHm5D6DiqKW34Y38Hjjpq6o4qgx9wKeRd5/zTO/MvgGHOWNG89+XIAAAAABJRU5ErkJggg=="
 
+const commonImg = new Image();
+commonImg.src = LOGO_ICON;
 export default class Custom3DGraph extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
             data: [],
             dagMode: 'null',
+            isResize: false,
         }
         this.ele = null        // 容器对象
         this.graph = null       // 画布对象
@@ -27,6 +31,7 @@ export default class Custom3DGraph extends React.Component {
 
         this.toAdjustTimer = null;      // 结点自适应屏幕的执行定时器
         this.clickEventTime = null      // 存放点击结点需要执行方法的定时器
+        this.resizeTime = null;
     }
     initData = data => {
         data.nodes.map((node) => {  // 如果存在图片，先进行处理
@@ -36,7 +41,7 @@ export default class Custom3DGraph extends React.Component {
                 node.img = img
             }
         })
-        
+
         // 处理结点的neighbors数据
         data.links.forEach(link => {
             const a = data.nodes.find(bean => bean.id === link.source);
@@ -55,57 +60,138 @@ export default class Custom3DGraph extends React.Component {
         this.setState({ data: data })
     }
 
+    handleFont = (node, context) => {
+        const arr = node.font.split('-')
+        const type = arr[0]
+        let color = arr[arr.length - 1]
+        let content = arr[arr.length - 2]
+        if (!color.startsWith('#')) {
+          content = color
+          color = '#000000'
+        }
+        // 通过div来hack获取图标
+        const divNode = document.createElement('div')
+        divNode.innerHTML = content
+
+        // console.log('content', content, divNode.innerHTML)
+        // if (!content) {
+        //   _shortCutIcon = LOGO_ICON
+        //   return
+        // }
+        let font = 'Font-Awesome-Brands'
+        let fontWeight = '400'
+        if (type === 'fab') {
+          font = 'Font-Awesome-Brands'
+          fontWeight = '400'
+        } else if (type === 'fas') {
+          font = 'Font-Awesome-Solid'
+          fontWeight = '900'
+        } else {
+          font = 'Font-Awesome-Regular'
+          fontWeight = '400'
+        }
+        
+        divNode.style.fontFamily = font;
+        divNode.style.display = 'none';
+        document.body.appendChild(divNode);
+
+
+        context.fillStyle = color
+        let fontSize = this.state.dagMode === 'null'? '10px': '28px'
+        context.font = `${fontWeight} ${fontSize} ${font}`
+        context.fillText(divNode.innerHTML, node.x, node.y)
+        // document.fonts.ready.then(() => {
+        // context.fillText(divNode.innerHTML, node.x, node.y)
+        // document.body.removeChild(divNode)
+        // _shortCutIcon = _canvas.toDataURL('image/png') || LOGO_ICON
+        // this.changeShortCutIcon(_shortCutIcon)
+        // })
+    }
     initGraph = () => {
         this.graph = new ForceGraph()
         this.graph(this.ele)
             .graphData(this.state.data)
             // .width(400).height(400).backgroundColor('#ccc')   // 设置canvas样式的3个方法
             .nodeAutoColorBy('group')   // 根据自定义的type来将同一类node节点颜色统一
-            .nodeVal(7)  // node 圈圈的大小
-            .nodeLabel('id')  // hover上去显示的内容
-            .linkWidth(link => this.highlightLinks.has(link) || this.hoverHighlightLinks.has(link) ? 5 : 1)
-            .linkDirectionalParticleWidth(link => this.highlightLinks.has(link) || this.hoverHighlightLinks.has(link) ? 4 : 0)
-            .linkDirectionalParticles("value")
-            .linkColor(link => this.highlightLinks.size > 0 ? this.highlightLinks.has(link) ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.05)' : this.hoverHighlightLinks.has(link) ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)')
-            .linkDirectionalParticleSpeed(d => d.value * 0.001)
+            .nodeVal(() => this.state.dagMode === 'null'? 8:28)  // node 圈圈的大小
+            .nodeLabel('label')  // hover上去显示的内容
+            .linkWidth(link => this.highlightLinks.has(link) || this.hoverHighlightLinks.has(link) ? 2 : 2)
+            .linkColor(link => this.highlightLinks.size > 0 ? this.highlightLinks.has(link) ? '#CF5659' : '#EEEBEB' : this.hoverHighlightLinks.has(link) ? '#CF5659' : '#EEEBEB')
+            // .linkDirectionalParticleSpeed(0.001)
+            // .linkDirectionalParticleWidth(link => this.highlightLinks.has(link) || this.hoverHighlightLinks.has(link) ? 4 : 0)
+            // .linkDirectionalParticles(10)
+            // .linkDirectionalParticleColor('rgb(168, 86, 207)')
             .nodeCanvasObject((node, ctx, globalScale) => {  // 文字节点
-                const label = node.id;
-                const fontSize = 12 / globalScale;
+                const label = node.label;
+                const fontSize = 10 / globalScale;
                 const imgSize = 1.2 * fontSize
                 const existImg = !!node.img
-                // 添加图片
+
+                // 绘制外圈
                 ctx.beginPath();
-                let r = 7
-                ctx.fillStyle = 'rgba(172, 77, 229)';
-                if (this.highlightNodes.size > 0) { // 当前有选中结点
-                    if (this.highlightNodes.has(node)) {
-                        r = 1.2 * r
-                    } else {
-                        ctx.fillStyle = 'rgba(172, 77, 229, 0.6)';
-                    }
+                let outlineR = this.state.dagMode === 'null'? 8 : 26
+                let lineWidth = this.state.dagMode === 'null'? 1 : 2
+                ctx.arc(node.x, node.y, outlineR, 0 * Math.PI, 2 * Math.PI)
+                if (this.selectedNodes.has(node)) {
+                    ctx.lineWidth = lineWidth;
+                    ctx.strokeStyle = 'rgba(0,0,0,0.10)'
+                    ctx.stroke()
+                    ctx.arc(node.x, node.y, outlineR - lineWidth, 0 * Math.PI, 2 * Math.PI)
+                    ctx.fillStyle = '#CF5659';
+                    ctx.fill()
+                } else if (this.highlightNodes.has(node)) {
+                    ctx.lineWidth = lineWidth;
+                    ctx.strokeStyle = '#CF5659';
+                    ctx.stroke()
+                    ctx.fillStyle = 'white'
+                    ctx.fill()
                 } else {
-                    if (this.hoverHighlightNodes.has(node)) { // 当前有hover结点
-                        r = 1.2 * r
-                    }
-                }
-                ctx.save(); // 保存当前ctx的状态
-                ctx.arc(node.x, node.y, r, 0 * Math.PI, 2 * Math.PI)
-                if (existImg) {  // 有图片显示图片
-                    ctx.clip(); //裁剪上面的圆形
-                    ctx.drawImage(node.img, node.x - r, node.y - r, 2*r, 2*r);
-                } else {    // 没图片显示默认
+                    ctx.lineWidth = lineWidth;
+                    ctx.strokeStyle = '#e8e8e8';
+                    ctx.stroke()
+                    ctx.fillStyle = 'white'
                     ctx.fill()
                 }
                 ctx.closePath();
-                ctx.restore(); // 还原状态
+
+                if (existImg) {  // 有图片显示图片
+                    // 添加图片
+                    ctx.beginPath();
+                    let inlineR = this.state.dagMode === 'null'? 5: 14
+                    ctx.save(); // 保存当前ctx的状态
+                    ctx.arc(node.x, node.y, inlineR, 0 * Math.PI, 2 * Math.PI)
+                    try {
+                        ctx.drawImage(node.img, node.x - inlineR, node.y - inlineR, 2 * inlineR, 2 * inlineR);      
+                    } catch (e) {
+                        ctx.drawImage(commonImg, node.x - inlineR, node.y - inlineR, 2 * inlineR, 2 * inlineR);      
+                    }
+                    ctx.closePath();
+                    ctx.restore(); // 还原状态
+                } else if (node.font) {
+                    // console.log(node.font)
+                    this.handleFont(node, ctx)
+                } else if (node.emoji) {
+                    ctx.fillStyle = '#1E1F2A'
+                    ctx.font = this.state.dagMode === 'null'?  `10px AppleColorEmoji`:`28px AppleColorEmoji`
+                    ctx.fillText(node.emoji, this.state.dagMode === 'null'? node.x +1: node.x, this.state.dagMode === 'null'? node.y +1: node.y + 3)
+                } else {    // 没图片显示默认
+                    // ctx.fill()
+                }
                 // 添加文字
-                ctx.font = `${fontSize}px Sans-Serif`;
+                ctx.font = `${fontSize}px PingFangSC-Medium,Sans-Serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = node.color;
-                ctx.fillText(label, node.x, node.y + imgSize);
+                ctx.fillStyle = '#312727';
+                if (this.selectedNodes.has(node)) {
+                    ctx.fillStyle = '#CF5659';
+                } else {
+                    if (this.highlightNodes.size > 0 && !this.highlightNodes.has(node)) {
+                        ctx.fillStyle = '#C3BBBC';
+                    }
+                }
+                ctx.fillText(label, node.x, node.y + outlineR * 1.2 + fontSize/ 2);
             })
-            .onNodeHover(node => { 
+            .onNodeHover(node => {
                 this.ele.style.cursor = node ? '-webkit-grab' : null;
             })
             .onLinkHover(link => {
@@ -175,19 +261,36 @@ export default class Custom3DGraph extends React.Component {
             .onNodeDragEnd(node => {
                 node.fx = node.x;
                 node.fy = node.y;
-              })
+            })
             .d3VelocityDecay(.2)
             .d3AlphaDecay(0.02)
             .dagLevelDistance(100)
+            // .d3Force('charge').strength(node => 0.01)
             .d3Force('link').distance(link => 100);
     }
     componentDidMount() {
         // 异步获取数据
-        fetch('./miserables.json').then(res => res.json()).then(data => {
+        fetch('./basic.json').then(res => res.json()).then(data => {
             // 对数据做一些额外处理
             this.initData(data)
             // 渲染graph
             this.initGraph()
+            setTimeout(() => {
+                this.graph.zoomToFit(400)
+                // clearTimeout(this.toAdjustTimer)
+                // this.toAdjustTimer = null
+            }, 2000)
+        })
+        window.addEventListener('resize', () => {
+            console.log('resize', this.ele.getClientRects())
+            if (this.resizeTime) {
+                clearTimeout(this.resizeTime)
+                this.resizeTime = null
+            }
+            this.resizeTime = setTimeout(() => {
+                const { width, height} = document.getElementById('root').getClientRects()
+                this.graph.width(width).height(height)
+            }, 100)
         })
     }
 
@@ -201,7 +304,7 @@ export default class Custom3DGraph extends React.Component {
         if (this.state.dagMode !== 'null') {
             this.graph
                 .dagMode(this.state.dagMode)
-                .d3Force('collide', d3.forceCollide(13))
+                .d3Force('collide', d3.forceCollide(100).strength(0.4))
         } else {
             this.graph
                 .dagMode(this.state.dagMode)
@@ -230,6 +333,7 @@ export default class Custom3DGraph extends React.Component {
                         labelId="demo-simple-select-label"
                         id="demo-simple-select"
                         label="选择结点"
+                        variant="outlined" 
                         style={{ width: '100px', marginRight: '16px' }}
                         value={this.state.dagMode}
                         onChange={(e, val) => {
@@ -238,7 +342,7 @@ export default class Custom3DGraph extends React.Component {
                             this.setState({ dagMode: e.target.value })
                             setTimeout(() => {
                                 this.graph.zoomToFit(400)
-                            }, 1000)
+                            }, 2000)
                         }}
                     >
                         <MenuItem value={'null'}>默认</MenuItem>
@@ -252,11 +356,11 @@ export default class Custom3DGraph extends React.Component {
                         onChange={(e, node) => { this.toFitNode(node) }}
                         options={this.state.data && this.state.data.nodes || []}
                         getOptionLabel={(option) => option.id}
-                        style={{ width: 300 }}
+                        style={{ width: 300,marginRight: 16 }}
                         clearOnBlur={true}
                         renderInput={(params) => <TextField {...params} label="搜索结点" variant="outlined" />}
                     />
-                    <Button onClick={() => {
+                    <Button variant="outlined"  style={{height: 56}} onClick={() => {
                         if (this.toAdjustTimer) {
                             clearTimeout(this.toAdjustTimer)
                         }

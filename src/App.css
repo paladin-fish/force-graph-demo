@@ -36,3 +36,41 @@
     transform: rotate(360deg);
   }
 }
+
+
+
+@font-face {
+  font-family : 'Font-Awesome-Brands';
+  font-style  : normal;
+  font-weight : 400;
+  font-display: block;
+  src         : url('./font/fa-brands-400.eot');
+  src         : url('./font/fa-brands-400.eot?#iefix') format('embedded-opentype'),
+    url('./font/fa-brands-400.woff2') format('woff2'),
+    url('./font/fa-brands-400.woff') format('woff'),
+    url('./font/fa-brands-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family : 'Font-Awesome-Regular';
+  font-style  : normal;
+  font-weight : 400;
+  font-display: block;
+  src         : url('./font/fa-regular-400.eot');
+  src         : url('./font/fa-regular-400.eot?#iefix') format('embedded-opentype'),
+    url('./font/fa-regular-400.woff2') format('woff2'),
+    url('./font/fa-regular-400.woff') format('woff'),
+    url('./font/fa-regular-400.ttf') format('truetype');
+}
+
+@font-face {
+  font-family : 'Font-Awesome-Solid';
+  font-style  : normal;
+  font-weight : 900;
+  font-display: block;
+  src         : url('./font/fa-solid-900.eot');
+  src         : url('./font/fa-solid-900.eot?#iefix') format('embedded-opentype'),
+    url('./font/fa-solid-900.woff2') format('woff2'),
+    url('./font/fa-solid-900.woff') format('woff'),
+    url('./font/fa-solid-900.ttf') format('truetype');
+}
