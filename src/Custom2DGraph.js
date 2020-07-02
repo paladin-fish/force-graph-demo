@@ -139,7 +139,7 @@ export default class Custom3DGraph extends React.Component {
                     ctx.arc(node.x, node.y, outlineR - lineWidth, 0 * Math.PI, 2 * Math.PI)
                     ctx.fillStyle = '#CF5659';
                     ctx.fill()
-                } else if (this.highlightNodes.has(node)) {
+                } else if (this.highlightNodes.has(node) || this.hoverHighlightNodes.has(node)) {
                     ctx.lineWidth = lineWidth;
                     ctx.strokeStyle = '#CF5659';
                     ctx.stroke()
