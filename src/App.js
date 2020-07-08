@@ -10,7 +10,7 @@ function App() {
   return (
     <div className="App">
       <div ref={graphEle}></div>
-      <div style={{display:'flex', flexDirection: 'row', fontFamily:"Font-Awesome-Solid,Font-Awesome-Regular,Font-Awesome-Brands"}}>
+      <div style={{display:'flex', flexDirection: 'row'}}>
         <div>
           {/* <Custom3DGraph /> */}
         </div>
