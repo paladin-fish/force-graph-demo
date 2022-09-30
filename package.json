@@ -12,7 +12,7 @@
     "d3-force": "^2.0.1",
     "d3-quadtree": "^1.0.7",
     "dat.gui": "^0.7.7",
-    "force-graph": "^1.30.2",
+    "force-graph": "^1.42.13",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1"
